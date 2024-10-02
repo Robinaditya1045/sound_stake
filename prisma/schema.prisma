@@ -15,5 +15,58 @@ datasource db {
 
 model User {
   id Int @id @default(autoincrement())
-  name String
+  accountAddress String @unique
+  verificationStatus VerificationStatus @default(UnVerified)
+  isOnboarded Boolean @default(false)
+  userInfo UserInfo?
+  createdAt DateTime @default(now())
+  songs Song[]
+  followers Follower[] @relation("UserFollowed")
+  following Follower[] @relation("UserFollowing")
+  likes Like[]
 }
+
+model UserInfo {
+  id Int @id @default(autoincrement())
+  userId Int @unique
+  user User @relation(fields: [userId], references: [id])
+  name String
+  instaAccUrl String?
+}
+
+model Song {
+  id Int @id @default(autoincrement())
+  userId Int
+  name String
+  thumbnail String
+  songCid String
+  length String
+  totalListeningHrs BigInt
+  user User @relation(fields: [userId], references: [id])
+  likes Like[]
+}
+
+model Like {
+  id Int @id @default(autoincrement())
+  userId Int
+  songId Int
+  user User @relation(fields: [userId], references: [id])
+  song Song @relation(fields: [songId], references: [id])
+
+  @@unique([userId, songId]) // Prevent a user from liking the same song more than once
+}
+
+model Follower {
+  id Int @id @default(autoincrement())
+  followingId Int
+  followedId Int
+  following User @relation("UserFollowing", fields: [followingId], references: [id])
+  followed User @relation("UserFollowed", fields: [followedId], references: [id])
+}
+
+enum VerificationStatus {
+  Verified
+  UnVerified
+  Processing
+}
+
